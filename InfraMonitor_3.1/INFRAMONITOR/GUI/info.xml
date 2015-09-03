@@ -1,0 +1,28 @@
+<productinfo
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="optional">
+<?xml-stylesheet type="text/xsl" href="optional"?>
+
+<matlabrelease>14</matlabrelease>
+<name>InfraMonitor3.0</name>
+<type>toolbox</type>
+<icon>$toolbox/matlab/icons/matlabicon.gif</icon>
+<help_location>../HELPFILES</help_location>
+
+<list>
+
+<listitem>
+<label>InfraMonitor GUI</label>
+<callback>InfraMonitor2</callback>
+<icon>$toolbox/matlab/icons/type_m-gui.gif</icon>
+</listitem>
+
+<listitem>
+<label>Tau-P</label>
+<callback>InfraTaup</callback>
+<icon>$toolbox/matlab/icons/type_m-gui.gif</icon>
+</listitem>
+
+</list>
+
+</productinfo>

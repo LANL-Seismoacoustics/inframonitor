@@ -1,0 +1,160 @@
+-------------------------------------------------------------------------------------
+TauP2.1 Users Guide
+-------------------
+
+TauP2.1 is a Matlab toolbox for infrasound propagation that utilizes the Tau-P method
+of Garces et al. (1998) and the numerical approach of Drob et al. (2010).
+
+Input atmospheric specifications (.met files) are generated from G2S models using the
+client software in .../MATLAB/G2S (or from atmospheric sounding data)  --> see below
+
+Stephen Arrowsmith (arrows@lanl.gov)
+-------------------------------------------------------------------------------------
+
+EXAMPLES OF USING TauP2.1
+-------------------------
+
+1. Forward Propagation from a known source location
+
+	a) Find Eigenrays
+	
+	In this instance, the source location is known (or estimated a priori).
+	Run eigenray to find rays that connect the known source to the receiver
+	location within a specified miss distance, e.g.,
+	[ray,eigenrays] = eigenray([32.95 -106.85],[35.8741 -106.3325],10,'2005012512.met',250,0)
+	
+	Then, plot resultant rays
+	If fullray=0, i.e., computing the full ray paths (Note: Computes multiple bounce points if appropriate):
+		plottaup(ray(eigenrays),[35 -120],[35 -122],10)
+	If fullray=1, i.e., computing only the bounce points (Note: Only computes up to the 1st bounce point):
+		[cray,D] = ClosestEigenray(ray,eigenrays,[32.95 -106.85],[35.8741 -106.3325]) # Finds closest eigenray
+		ray(326)	# Examines parameters of closest eigenray
+		taup('2005012512.met',250,0,6,6,500,1,1,0,0)	# Computes full ray-path
+		plottaup(ray(1),[32.95 -106.85],[35.8741 -106.3325],10)
+	
+	To find the closest eigenray that connects the source and receiver, from a set
+	of eigenrays:
+		[cray,D] = ClosestEigenray(ray,eigenrays,[32.95 -106.85],[35.8741 -106.3325])
+		(where D is the associated miss distance)
+
+	b) Find and plot map of bounce points at multiple launch angles/azimuths
+	
+	Run fullwave, e.g.,
+	fullwave('2005012512.met',250,0,500,1,[32.0 -106.0],[-120 -90],[24 40])
+	
+2. Reverse Propagation from receiver location
+
+	a) Shoot a single ray
+	
+	To shoot a single ray, run taup as in the following example:
+	
+	clear; clear global ray
+	global ray
+	taup('METDATA/RealModel.met',2000,1.64,270,10,2000,0,1,1)
+	RotateXY(1)
+	AzDev(1)
+	BouncePoints(1)
+	plottaup(ray,[34.9695 -95.8926],[],[])
+	
+	To get the coordinates of the bounce points:
+	
+	evloc = [34.9695 -95.8926];
+	BP = cat(2,evloc(1) + km2deg(ray.bp(:,2)),evloc(2) + km2degsc(ray.bp(:,1),evloc(1)))
+
+	b) Shoot multiple rays
+	
+	Run runtaup with reverse set to 1
+	
+	e.g.,
+	ray = runtaup('METDATA/RealModel.met',(90:1:135),(1:1:90),2000,2000,1.64,1)
+	
+	c) Find bounce points for an arrival with known backazimuth
+	
+	In this instance, you may have a signal observed at an array, but the source
+	location is unknown. We want to find all possible source locations by back-
+	propagating from the receiver, at the observed backazimuth, with a range of launch
+	angles (since phase velocity is non-unique for infrasound).
+	
+	e.g.,
+	ray = runtaup('Wells.met',264,(1:1:90),156,500,1.64,1)
+	evloc = [40.9204 -113.0309];
+	bpcoords = GetBPCoords(ray,evloc)
+	
+	To plot the bounce points on a 3D ray plot:
+	
+	e.g,
+	plottaup(ray,[40.9204 -113.0309],[],[])
+	hold on
+	plot3(bpcoords(:,1),bpcoords(:,2),zeros(size(bpcoords,1),1),'ro')
+
+INPUT FILES
+-----------
+
+TauP2.0 reads two types of atmospheric files:
+
+1. .met files
+   ASCII files with the following format:
+   elevation (km), temperature (K), zonal wind (m/s), meridional wind (m/s)
+   These files can be generated from soundings (see below), from G2S models using atmosprofile, or from profiles extracted from great-circle paths.
+   
+   To extract profiles using atmosprofile:
+   - Copy G2S file into Extract directory
+   - Run atmosprofile
+   - Write out .met file, e.g.,
+	fid = fopen('012505.met','w');
+	for i = 1:numel(zg)
+		fprintf(fid,'%f %f %f %f\n',zg(i),tg(i),ug(i),vg(i));
+	end
+	fclose(fid)
+
+   ************************* THIS DOES NOT SEEM TO BE WORKING ****************************
+   To extract profiles from a great-circle path (.env) file:
+   makemet, e.g., makemet('DLIAR2005012512.env',356.0192,'2005012512.met')
+   The .env file is generated from the G2SCLIENT software for a given source-receiver path
+   ***************************************************************************************
+
+2. .mat files
+   Binary files containing winds and temperatures *along a great-circle path*
+   These files can be generated from G2S models using
+   readenv, e.g., [c,u,v,z] = readenv('DLIAR2005012512.env'); save('DLIAR.mat','c','u','v','z')
+
+Note: For generating .met files it is appropriate to compute the 1D profile in the .env file
+closest to the starting location (for .mat files, choose the central profile)
+
+OUTPUT VARIABLES
+----------------
+
+The main output variable is a structure array, ray, with the following components for each ray:
+phi (launch azimuth), theta (launch angle), x (km east), y (km north), z (km vertical),
+v_g (group velocity), az_dev (azimuthal deviation), bp (bounce points)
+
+All coordinates are in km but can be converted to (lat,lon) as shown in 2(a) above
+
+e.g., for a single ray,
+
+ray = 
+
+       phi: 270
+     theta: 10
+         x: [1x381 double]
+         y: [1x381 double]
+         z: [1x381 double]
+       v_g: 0.3023
+    az_dev: -0.0886
+        bp: [10x2 double]
+
+For eigenray computations, the output vector (eigenrays) is a vector containing the elements
+of ray that are eigenrays.
+
+ADDITIONAL FUNCTIONS
+--------------------
+
+There are two functions for reading and handling sounding data from the University of
+Utah website: http://weather.uwyo.edu/upperair/sounding.html
+
+ProcSounding.m: Reads in a sounding file (which consists of sounding data from the
+website that has been copied and pasted --> see ExampleSoundingFile in Taup toolbox
+directory for an example) and writes out a met file
+
+ResampleSounding.m: Resamples met file produced by ProcSounding (using spline function)
+to generate an evenly spaced met file (which is required by TauP)

@@ -1,0 +1,26 @@
+---------------------------------
+PYTHON UTILITIES FOR INFRAMONITOR
+---------------------------------
+
+These Python scripts are provided AS EXAMPLES for running InfraMonitor in batch mode and
+for analyzing the results. These scripts are not meant to run out-of-the-box but are for
+help in designing your own scripts
+
+For help on any of these files type: Python-Script -h
+e.g. MakeWfdisc.py -h
+Of course, you should ensure that this PYTHON directory has been added to your path
+
+Scripts for pre-processing:
+MakeWfdisc.py 		  - Make a wfdisc file from a bunch of SAC files (requires pysacio)
+MakeSite.py   		  - Make a site file from a wfdisc file and SAC files (requires pysacio)
+RobustSiteReader.py   - Formats a wfdisc file with nnsa format (which InfraMonitor can read)
+RobustWfdiscReader.py - Formats a site file with nnsa format (which InfraMonitor can read)
+
+Scripts for running InfraMonitor:
+RunInfraMonitor.py    - Runs InfraMonitor in batch mode
+
+Scripts for post-processing:
+CleanEvents.py		  - Removes events from IMassoc, IMpoly, origin tables with duplicate arrivals
+CatTables.py		  - Concatenates a bunch of separate IMassoc, IMpoly, origin tables
+RemoveEvents.py		  - Removes events from IMassoc, IMpoly, origin tables based on the area of uncertainty
+MakePolygonKML.py	  - Makes a Google Earth kml file for a given IMpoly table
